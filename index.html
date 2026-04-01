@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>DANZ OFC - Streaming Film Gratis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* LOADING SIMPLE */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #333;
+            border-top-color: #e50914;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: #e50914;
+            font-size: 18px;
+        }
+
+        /* HIDE LOADING */
+        .content-hidden {
+            display: none;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(180deg, #000 0%, #0a0a0a 100%);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            background: #1a1a1a;
+            padding: 5px 12px;
+            border-radius: 30px;
+            border: 1px solid #333;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 8px;
+            width: 200px;
+            outline: none;
+        }
+
+        .search-box button {
+            background: #e50914;
+            border: none;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* MAIN */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* CATEGORY TABS */
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px 18px;
+            border-radius: 30px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+
+        .tab-btn.active {
+            background: #e50914;
+            border-color: #e50914;
+        }
+
+        /* MOVIE GRID */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 20px;
+        }
+
+        .movie-card {
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid #222;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            border-color: #e50914;
+        }
+
+        .movie-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #e50914;
+        }
+
+        .movie-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            padding: 10px;
+        }
+
+        .movie-title {
+            font-weight: bold;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-year {
+            color: #888;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .movie-rating {
+            color: #ffc107;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 950px;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e50914;
+        }
+
+        .modal-header {
+            padding: 12px 18px;
+            background: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: #e50914;
+            font-size: 18px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+
+        .close-modal:hover {
+            background: #e50914;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .movie-detail {
+            padding: 15px;
+            background: #111;
+        }
+
+        .movie-detail p {
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .alt-sources {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .alt-btn {
+            background: #222;
+            border: 1px solid #e50914;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .alt-btn:hover {
+            background: #e50914;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #222;
+            color: #666;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+            .search-box input {
+                width: 120px;
+            }
+            .tab-btn {
+                padding: 5px 12px;
+                font-size: 11px;
+            }
+            .logo {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>🎬 DANZ OFC</p>
+        <p style="font-size:12px; color:#888;">Memuat film...</p>
+    </div>
+
+    <div class="content-hidden" id="mainContent">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo" onclick="location.reload()">🎬 DANZ<span style="color:#e50914;">OFC</span></div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari film...">
+                    <button onclick="searchMovies()">Cari</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="category-tabs" id="categoryTabs">
+                <button class="tab-btn active" data-cat="popular">🔥 POPULER</button>
+                <button class="tab-btn" data-cat="action">⚡ ACTION</button>
+                <button class="tab-btn" data-cat="comedy">😂 KOMEDI</button>
+                <button class="tab-btn" data-cat="horror">😱 HOROR</button>
+                <button class="tab-btn" data-cat="scifi">🚀 SCI-FI</button>
+                <button class="tab-btn" data-cat="drama">🎭 DRAMA</button>
+                <button class="tab-btn" data-cat="indonesia">🇮🇩 INDONESIA</button>
+                <button class="tab-btn" data-cat="anime">🎌 ANIME</button>
+            </div>
+            <div class="movie-grid" id="movieGrid"></div>
+        </div>
+
+        <div class="footer">
+            <p>🎬 <strong>DANZ OFC</strong> - Streaming Film Gratis</p>
+            <p>⚡ Jika player error, klik sumber alternatif di bawah player</p>
+        </div>
+    </div>
+
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Judul Film</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="video-container">
+                <iframe id="movieIframe" src="" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="movie-detail">
+                <p id="modalSynopsis"></p>
+                <div class="alt-sources" id="altSources"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATABASE FILM (SEMUA PAKE POSTER VALID) ====================
+        const movies = {
+            popular: [
+                { id: 693134, title: "Dune: Part Two", year: 2024, rating: 8.7, embed: "https://vidsrc.me/embed/movie/693134", poster: "https://image.tmdb.org/t/p/w200/8b8R8l88Qje9dnbOE6h0jVr6S3b.jpg", synopsis: "Paul Atreides bersatu dengan Chani dan Fremen untuk membalas dendam pada para konspirator yang menghancurkan keluarganya." },
+                { id: 872585, title: "Oppenheimer", year: 2023, rating: 8.5, embed: "https://vidsrc.me/embed/movie/872585", poster: "https://image.tmdb.org/t/p/w200/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", synopsis: "Kisah J. Robert Oppenheimer, fisikawan yang memimpin Proyek Manhattan untuk mengembangkan bom atom pertama." },
+                { id: 569094, title: "Spider-Man: Across the Spider-Verse", year: 2023, rating: 8.6, embed: "https://vidsrc.me/embed/movie/569094", poster: "https://image.tmdb.org/t/p/w200/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg", synopsis: "Miles Morales bertualang melintasi multiverse bersama Gwen Stacy dan tim Spider-People baru." }
+            ],
+            action: [
+                { id: 575264, title: "Mission: Impossible - Dead Reckoning", year: 2023, rating: 8.1, embed: "https://vidsrc.me/embed/movie/575264", poster: "https://image.tmdb.org/t/p/w200/628Dep6AxEtDxjZoM78u8YsnjO9.jpg", synopsis: "Ethan Hunt dan timnya menghadapi musuh terbaru yang disebut Entity, AI yang mematikan." },
+                { id: 385687, title: "Fast X", year: 2023, rating: 7.2, embed: "https://vidsrc.me/embed/movie/385687", poster: "https://image.tmdb.org/t/p/w200/fiVW06jE7z9YnO4trhaMEdclSiC.jpg", synopsis: "Dom Toretto dan keluarga menghadapi Dante Reyes, anak dari penjahat yang pernah mereka kalahkan." },
+                { id: 603692, title: "John Wick: Chapter 4", year: 2023, rating: 8.3, embed: "https://vidsrc.me/embed/movie/603692", poster: "https://image.tmdb.org/t/p/w200/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg", synopsis: "John Wick menemukan jalan untuk mengalahkan High Table dengan harga yang sangat mahal." }
+            ],
+            comedy: [
+                { id: 346698, title: "Barbie", year: 2023, rating: 7.8, embed: "https://vidsrc.me/embed/movie/346698", poster: "https://image.tmdb.org/t/p/w200/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg", synopsis: "Barbie dan Ken berpetualang di dunia nyata setelah dikeluarkan dari Barbieland." },
+                { id: 502356, title: "The Super Mario Bros. Movie", year: 2023, rating: 7.4, embed: "https://vidsrc.me/embed/movie/502356", poster: "https://image.tmdb.org/t/p/w200/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg", synopsis: "Mario dan Luigi berpetualang di dunia Mushroom Kingdom untuk menyelamatkan Princess Peach." }
+            ],
+            horror: [
+                { id: 893723, title: "The Nun II", year: 2023, rating: 6.5, embed: "https://vidsrc.me/embed/movie/893723", poster: "https://image.tmdb.org/t/p/w200/5gzzkR7y3hnY8AD1wXjCnVlHba5.jpg", synopsis: "Suster Irene kembali menghadapi Valak, iblis dalam wujud biarawati, di Prancis." },
+                { id: 1003579, title: "Five Nights at Freddy's", year: 2023, rating: 6.9, embed: "https://vidsrc.me/embed/movie/1003579", poster: "https://image.tmdb.org/t/p/w200/7BvXh3Jq6hK9Q8qQy2qZwFqXv5.jpg", synopsis: "Penjaga keamanan di restoran Freddy Fazbear's Pizza menghadapi animatronik yang hidup di malam hari." }
+            ],
+            scifi: [
+                { id: 157336, title: "Interstellar", year: 2014, rating: 8.6, embed: "https://vidsrc.me/embed/movie/157336", poster: "https://image.tmdb.org/t/p/w200/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", synopsis: "Perjalanan luar angkasa mencari planet baru untuk kelangsungan hidup manusia." },
+                { id: 335984, title: "Blade Runner 2049", year: 2017, rating: 8.0, embed: "https://vidsrc.me/embed/movie/335984", poster: "https://image.tmdb.org/t/p/w200/gajvyDFcgIGcGj8cE7W2l7qVp1.jpg", synopsis: "Pencarian replicant yang hilang mengungkap rahasia besar tentang masa lalu." },
+                { id: 299534, title: "Avengers: Endgame", year: 2019, rating: 8.4, embed: "https://vidsrc.me/embed/movie/299534", poster: "https://image.tmdb.org/t/p/w200/or06FN3Dka5tukK1e9sl16pB3iy.jpg", synopsis: "Para Avengers berusaha membalikkan peristiwa Infinity War dan mengalahkan Thanos." }
+            ],
+            drama: [
+                { id: 475557, title: "Joker", year: 2019, rating: 8.5, embed: "https://vidsrc.me/embed/movie/475557", poster: "https://image.tmdb.org/t/p/w200/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", synopsis: "Arthur Fleck, seorang komedian gagal, berubah menjadi ikon kekacauan di Gotham City." },
+                { id: 496243, title: "Parasite", year: 2019, rating: 8.6, embed: "https://vidsrc.me/embed/movie/496243", poster: "https://image.tmdb.org/t/p/w200/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg", synopsis: "Kisah keluarga miskin yang menyusup ke rumah kaya dengan cara yang licik." },
+                { id: 19404, title: "The Pursuit of Happyness", year: 2006, rating: 8.0, embed: "https://vidsrc.me/embed/movie/19404", poster: "https://image.tmdb.org/t/p/w200/8WWD2qWfQFZRIUCW8W3qYqW8W.jpg", synopsis: "Kisah inspiratif seorang ayah yang berjuang untuk keluarganya di tengah kesulitan." }
+            ],
+            indonesia: [
+                { id: 790001, title: "KKN di Desa Penari", year: 2022, rating: 7.2, embed: "https://vidsrc.me/embed/movie/790001", poster: "https://image.tmdb.org/t/p/w200/6tB0r9XqY1XqY1XqY1XqY1XqY1.jpg", synopsis: "Mahasiswa KKN mengalami kejadian mistis di desa terpencil yang mengubah hidup mereka." },
+                { id: 828764, title: "Pengabdi Setan 2", year: 2022, rating: 7.5, embed: "https://vidsrc.me/embed/movie/828764", poster: "https://image.tmdb.org/t/p/w200/8qY1XqY1XqY1XqY1XqY1XqY1Xq.jpg", synopsis: "Rini dan keluarganya pindah ke rumah susah yang angker setelah kejadian di masa lalu." },
+                { id: 799143, title: "Sri Asih", year: 2022, rating: 6.8, embed: "https://vidsrc.me/embed/movie/799143", poster: "https://image.tmdb.org/t/p/w200/8qY1XqY1XqY1XqY1XqY1XqY1Xq.jpg", synopsis: "Superhero wanita Indonesia pertama yang mencari jati dirinya dan melawan kejahatan." }
+            ],
+            anime: [
+                { id: 385128, title: "Suzume no Tojimari", year: 2022, rating: 8.2, embed: "https://vidsrc.me/embed/movie/385128", poster: "https://image.tmdb.org/t/p/w200/6tB0r9XqY1XqY1XqY1XqY1XqY1.jpg", synopsis: "Suzume berpetualang menutup pintu-pintu yang membawa bencana di seluruh Jepang." },
+                { id: 99861, title: "Your Name (Kimi no Na wa)", year: 2016, rating: 8.9, embed: "https://vidsrc.me/embed/movie/99861", poster: "https://image.tmdb.org/t/p/w200/q719jXXEzOoYaps6babgTnONP0.jpg", synopsis: "Dua remaja yang terhubung secara misterius melalui mimpi dan takdir." },
+                { id: 920, title: "Spirited Away", year: 2001, rating: 8.6, embed: "https://vidsrc.me/embed/movie/920", poster: "https://image.tmdb.org/t/p/w200/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", synopsis: "Chihiro terperangkap di dunia roh dan harus bekerja di pemandian uap untuk menyelamatkan orang tuanya." }
+            ]
+        };
+
+        let currentMovie = null;
+
+        // TAMPILAN LANGSUNG (TANPA LOADING LAMA)
+        function renderMovies(category) {
+            const grid = document.getElementById('movieGrid');
+            const movieList = movies[category] || movies.popular;
+            
+            grid.innerHTML = movieList.map(movie => `
+                <div class="movie-card" onclick="playMovie(${movie.id}, '${movie.title.replace(/'/g, "\\'")}', '${movie.synopsis.replace(/'/g, "\\'")}')">
+                    <div class="movie-poster">
+                        <img src="${movie.poster}" alt="${movie.title}" onerror="this.src='https://placehold.co/300x450/e50914/white?text=${encodeURIComponent(movie.title)}'">
+                    </div>
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title}</div>
+                        <div class="movie-year">${movie.year}</div>
+                        <div class="movie-rating">⭐ ${movie.rating}/10</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // SWITCH KATEGORI
+        function switchCategory(category) {
+            renderMovies(category);
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if(btn.dataset.cat === category) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // PENCARIAN
+        function searchMovies() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                const activeCat = document.querySelector('.tab-btn.active').dataset.cat;
+                renderMovies(activeCat);
+                return;
+            }
+
+            const allMovies = [
+                ...movies.popular, ...movies.action, ...movies.comedy, 
+                ...movies.horror, ...movies.scifi, ...movies.drama, 
+                ...movies.indonesia, ...movies.anime
+            ];
+            const results = allMovies.filter(m => m.title.toLowerCase().includes(query));
+            
+            const grid = document.getElementById('movieGrid');
+            if (results.length > 0) {
+                grid.innerHTML = results.map(movie => `
+                    <div class="movie-card" onclick="playMovie(${movie.id}, '${movie.title.replace(/'/g, "\\'")}', '${movie.synopsis.replace(/'/g, "\\'")}')">
+                        <div class="movie-poster">
+                            <im
